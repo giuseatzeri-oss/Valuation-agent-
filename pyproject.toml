@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vt-valuation-agent"
+version = "0.1.0"
+description = "VT Capital's valuation agent: a Claude-powered analyst with a deterministic DCF, comps, precedents and LBO engine."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+dependencies = [
+    "anthropic>=1.15.0",
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0"]
+
+[project.scripts]
+vt-valuation-agent = "vt_valuation_agent.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["vt_valuation_agent*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

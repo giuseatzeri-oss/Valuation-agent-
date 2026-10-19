@@ -1,0 +1,45 @@
+{
+  "company": "Northwind Components (illustrative)",
+  "currency_unit": "USD millions (shares in millions)",
+  "shares_outstanding": 48.0,
+  "net_debt": 220.0,
+  "mid_year": true,
+  "wacc": {
+    "risk_free_rate": 0.042,
+    "beta": 1.15,
+    "equity_risk_premium": 0.055,
+    "size_premium": 0.01,
+    "pre_tax_cost_of_debt": 0.065,
+    "tax_rate": 0.25,
+    "debt_weight": 0.30
+  },
+  "projection": {
+    "base_revenue": 1200.0,
+    "revenue_growth": [0.09, 0.08, 0.07, 0.06, 0.05],
+    "ebitda_margin": [0.18, 0.185, 0.19, 0.195, 0.20],
+    "da_pct_revenue": 0.04,
+    "capex_pct_revenue": 0.05,
+    "nwc_pct_revenue": 0.12,
+    "tax_rate": 0.25
+  },
+  "terminal": { "growth": 0.025, "exit_multiple": 9.0 },
+  "sensitivity": {
+    "discount_rates": [0.08, 0.09, 0.10, 0.11, 0.12],
+    "terminal_growth_rates": [0.015, 0.02, 0.025, 0.03, 0.035],
+    "output": "enterprise_value"
+  },
+  "target_metrics": { "revenue": 1200.0, "ebitda": 210.0, "ebit": 162.0, "net_income": 105.0 },
+  "trading_comps": [
+    { "name": "Peer A", "ev_revenue": 1.6, "ev_ebitda": 9.2, "pe": 17.0 },
+    { "name": "Peer B", "ev_revenue": 1.9, "ev_ebitda": 10.5, "pe": 19.5 },
+    { "name": "Peer C", "ev_revenue": 1.3, "ev_ebitda": 8.1, "pe": 15.0 },
+    { "name": "Peer D", "ev_revenue": 2.2, "ev_ebitda": 11.0, "pe": 21.0 },
+    { "name": "Peer E", "ev_revenue": 1.5, "ev_ebitda": 8.8, "pe": 16.2 }
+  ],
+  "precedent_transactions": [
+    { "name": "Deal 1 (2024)", "ev_ebitda": 11.5, "ev_revenue": 2.1 },
+    { "name": "Deal 2 (2023)", "ev_ebitda": 10.2, "ev_revenue": 1.8 },
+    { "name": "Deal 3 (2025)", "ev_ebitda": 12.4, "ev_revenue": 2.4 },
+    { "name": "Deal 4 (2022)", "ev_ebitda": 9.6, "ev_revenue": 1.7 }
+  ]
+}
