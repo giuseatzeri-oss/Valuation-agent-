@@ -14,8 +14,12 @@ and testable.
 | Relative value | `trading_comps`, `precedent_transactions` | `valuation/comps.py` (quartile statistics on EV/Revenue, EV/EBITDA, EV/EBIT and P/E; EV-to-equity bridge) |
 | Returns | `lbo_returns`, `max_entry_multiple_for_target_irr` | `valuation/lbo.py` (annual debt paydown model, MOIC and IRR, ability-to-pay solver) |
 | Synthesis | `build_football_field`, `financial_calculator` | `valuation/football_field.py`, `valuation/finance_math.py` |
+| Hotel market study (RNAADR) | `hotel_market_study` | `valuation/hotel_market.py` (competitive set, HARC, demand by segment, fair share and penetration indices, latent and induced demand, new supply, occupancy, ADR and RevPAR by year) |
+| Hotel forecast of revenue and expense (FIXVAR) | `hotel_fixvar_proforma` | `valuation/hotel_fixvar.py` (fixed and variable components with variability indices, USALI statement to NOI) |
+| Hotel mortgage-equity valuation (HMEV) | `hotel_mortgage_equity_valuation` | `valuation/mortgage_equity.py` (loan sizing on LTV, DCR and debt yield, simultaneous valuation formula, equity residual) |
+| Greenfield feasibility | `residual_land_value` | `valuation/residual.py` (stabilised value deferred less development, finance and profit) |
 
-The system prompt in `vt_valuation_agent/prompts.py` encodes the house process: derive the
+For hotels and resorts the agent follows the HVS sequence RNAADR to FIXVAR to HMEV to residual land value. The system prompt in `vt_valuation_agent/prompts.py` encodes the house process: derive the
 WACC from its components, value with both terminal methods, triangulate against comps and
 precedents, run sensitivities, apply sanity checks (terminal value share of EV, implied
 multiples versus peers, growth versus GDP), and finish with a football field and the
@@ -118,6 +122,10 @@ outreach, trainee mentorship and quality control.
   and only the change hits cash flow.
 - The LBO is a single-tranche annual model with a cash sweep; it is for returns
   triangulation, not a financing model.
+- The mortgage-equity valuation uses monthly-pay mortgage constants, a ten-year hold by default,
+  and takes the most restrictive of the LTV, DCR and debt-yield loans as the lender's loan.
+- FIXVAR variability indices are computed in real terms (projected revenue deflated by the
+  inflation factor over base revenue), so inflation does not inflate the variable component twice.
 
 ## Tests
 

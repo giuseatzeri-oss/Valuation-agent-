@@ -21,6 +21,10 @@ from .valuation.comps import Comparable, TargetMetrics, relative_valuation
 from .valuation.dcf import dcf_valuation as _dcf_valuation
 from .valuation.dcf import project_free_cash_flows as _project_free_cash_flows
 from .valuation.football_field import ValuationRange, football_field as _football_field
+from .valuation.hotel_fixvar import ExpenseLine, RevenueLine, fixvar_proforma as _fixvar_proforma
+from .valuation.hotel_market import Competitor, NewSupply, SubjectHotel, market_study as _market_study
+from .valuation.mortgage_equity import mortgage_equity_valuation as _mortgage_equity_valuation
+from .valuation.residual import residual_land_value as _residual_land_value
 from .valuation.lbo import lbo_returns as _lbo_returns
 from .valuation.lbo import max_entry_multiple_for_irr as _max_entry_multiple_for_irr
 from .valuation.sensitivity import dcf_sensitivity as _dcf_sensitivity
@@ -431,6 +435,197 @@ def financial_calculator(
     return _dump({"operation": operation, "result": value})
 
 
+@beta_tool(eager_input_streaming=True)
+def hotel_market_study(
+    competitors: list[Competitor],
+    subject: SubjectHotel,
+    segment_growth: dict[str, float],
+    base_segment_adr: dict[str, float],
+    years: int,
+    unaccommodated_demand: Optional[dict[str, float]] = None,
+    induced_demand: Optional[dict[str, list[float]]] = None,
+    new_supply: Optional[list[NewSupply]] = None,
+    adr_inflation: float = 0.03,
+    max_occupancy: Optional[float] = None,
+) -> str:
+    """RNAADR: built-up room-night analysis and ADR forecast for a proposed hotel (HVS method).
+
+    Call this first for any hotel project. From the competitive set it derives
+    base-year accommodated demand by segment, each competitor's fair share,
+    market share and penetration index, then projects market demand (with
+    unaccommodated and induced demand and segment growth), new supply, and the
+    subject's room nights, occupancy, segment ADRs, blended ADR and RevPAR by
+    year. Feed occupancy_by_year and adr_by_year into hotel_fixvar_proforma.
+
+    Args:
+        competitors: Existing competitive hotels with rooms, base-year occupancy, segmentation, fraction open and competitive weight.
+        subject: The proposed hotel: rooms, opening fraction per year, penetration index per segment per year, ADR index per segment, optional ADR ramp.
+        segment_growth: Annual demand growth per segment, e.g. {"leisure": 0.03, "meeting": 0.02}.
+        base_segment_adr: Market ADR per segment in base-year currency, e.g. {"leisure": 320, "meeting": 260}.
+        years: Number of projection years (10 for the HVS convention).
+        unaccommodated_demand: Latent demand per segment as a share of base-year accommodated room nights, e.g. {"leisure": 0.05}.
+        induced_demand: Room nights per segment per year created by a new demand generator.
+        new_supply: Competitive hotels opening during the projection period.
+        adr_inflation: Annual ADR inflation applied to market segment ADRs.
+        max_occupancy: Optional cap on the subject's occupancy.
+    """
+    result = _guard(
+        _market_study, competitors, subject, segment_growth, base_segment_adr, years,
+        unaccommodated_demand, induced_demand, new_supply, adr_inflation, max_occupancy,
+    )
+    return _dump(result.to_dict())
+
+
+@beta_tool(eager_input_streaming=True)
+def hotel_fixvar_proforma(
+    rooms: int,
+    occupancy: list[float],
+    adr: list[float],
+    base_occupancy: float,
+    base_adr: float,
+    other_revenues: list[RevenueLine],
+    departmental_expenses: list[ExpenseLine],
+    undistributed_expenses: list[ExpenseLine],
+    fixed_charges: list[ExpenseLine],
+    base_management_fee_pct: float = 0.03,
+    incentive_fee_pct_of_gop: float = 0.0,
+    reserve_pct: float = 0.04,
+    inflation: float = 0.03,
+    available_rooms_fraction: Optional[list[float]] = None,
+) -> str:
+    """FIXVAR: fixed and variable component forecast of the hotel operating statement (HVS method).
+
+    Call this after hotel_market_study with its occupancy and ADR series. Each
+    line is projected as base x inflation x (fixed share + variable share x
+    index ratio), where the index is occupancy, the department's own revenue
+    or total revenue. Returns a USALI-style statement per year down to net
+    operating income after management fees, fixed charges and the reserve;
+    noi_by_year feeds hotel_mortgage_equity_valuation.
+
+    Args:
+        rooms: Room count.
+        occupancy: Projected occupancy per year.
+        adr: Projected nominal ADR per year.
+        base_occupancy: Occupancy at which the base statement is stated.
+        base_adr: Base-year ADR in current currency.
+        other_revenues: Non-rooms revenue departments with base amount and fixed share (index is occupancy).
+        departmental_expenses: Departmental expenses; rooms expense uses index "occupancy" with department "rooms", others "department_revenue".
+        undistributed_expenses: A&G, marketing, property operations, utilities; index usually "total_revenue".
+        fixed_charges: Property tax, insurance and similar; index usually "fixed".
+        base_management_fee_pct: Base management fee as a share of total revenue.
+        incentive_fee_pct_of_gop: Incentive fee as a share of GOP.
+        reserve_pct: Reserve for replacement as a share of total revenue (HVS convention 4 percent).
+        inflation: Annual inflation applied to all lines.
+        available_rooms_fraction: Share of the year rooms are available, for a partial opening year.
+    """
+    result = _guard(
+        _fixvar_proforma, rooms, occupancy, adr, base_occupancy, base_adr, other_revenues, departmental_expenses,
+        undistributed_expenses, fixed_charges, base_management_fee_pct, incentive_fee_pct_of_gop, reserve_pct, inflation,
+        available_rooms_fraction,
+    )
+    return _dump(result.to_dict())
+
+
+@beta_tool(eager_input_streaming=True)
+def hotel_mortgage_equity_valuation(
+    net_income: list[float],
+    equity_yield: float,
+    mortgage_interest_rate: float,
+    amortization_years: int,
+    terminal_cap_rate: float,
+    loan_to_value: Optional[float] = None,
+    debt_coverage_ratio: Optional[float] = None,
+    debt_yield: Optional[float] = None,
+    selling_costs_pct: float = 0.03,
+    holding_period: Optional[int] = None,
+    rooms: Optional[int] = None,
+    sizing_year: int = 1,
+) -> str:
+    """HMEV: hotel mortgage-equity valuation with loan sizing triangulated on LTV, DCR and debt yield (HVS method).
+
+    Call this with the FIXVAR net operating income for the holding period plus
+    one year. Solves the simultaneous valuation formula: value equals the
+    mortgage plus the present value, at the equity yield, of net income after
+    debt service and the equity residual (year n+1 income capitalised at the
+    terminal rate less selling costs less the loan balance). The most
+    restrictive loan test governs the concluded value.
+
+    Args:
+        net_income: NOI for years 1..n+1 (the last year is capitalised for the reversion).
+        equity_yield: Required before-tax equity yield rate, e.g. 0.16.
+        mortgage_interest_rate: Mortgage interest rate.
+        amortization_years: Amortisation period in years.
+        terminal_cap_rate: Terminal capitalisation rate applied to year n+1 income.
+        loan_to_value: Lender LTV limit, e.g. 0.60.
+        debt_coverage_ratio: Lender minimum DCR on year-1 income, e.g. 1.35.
+        debt_yield: Lender minimum debt yield on year-1 income, e.g. 0.10.
+        selling_costs_pct: Brokerage and legal costs at reversion.
+        holding_period: Years held; defaults to len(net_income) - 1.
+        rooms: Room count, to report value per key.
+        sizing_year: Projection year whose NOI the DCR and debt-yield tests use (1 by default; use the first stabilised year when the lender sizes on stabilised income).
+    """
+    result = _guard(
+        _mortgage_equity_valuation, net_income, equity_yield, mortgage_interest_rate, amortization_years, terminal_cap_rate,
+        loan_to_value, debt_coverage_ratio, debt_yield, selling_costs_pct, holding_period, rooms, 12, sizing_year,
+    )
+    return _dump(result.to_dict())
+
+
+@beta_tool(eager_input_streaming=True)
+def residual_land_value(
+    stabilised_value: float,
+    hard_costs: float,
+    soft_costs: float,
+    ffe_ose: float = 0.0,
+    site_works: float = 0.0,
+    preopening_working_capital: float = 0.0,
+    contingency_pct_of_hard: float = 0.075,
+    deferral_years: float = 0.0,
+    discount_rate: float = 0.0,
+    construction_ltc: float = 0.0,
+    construction_interest_rate: float = 0.0,
+    construction_years: float = 0.0,
+    average_drawn_fraction: float = 0.55,
+    financing_fees_pct: float = 0.01,
+    developer_profit_pct_on_cost: float = 0.15,
+    land_transaction_costs_pct: float = 0.0,
+    asking_land_price: Optional[float] = None,
+) -> str:
+    """Residual land value for a greenfield hotel or resort: stabilised value less all development, financing and profit requirements.
+
+    Call this last with the mortgage-equity (or DCF) value at stabilisation.
+    The value is deferred to today over the construction and ramp-up period,
+    then hard, site, soft, FF&E, pre-opening, contingency, construction
+    financing and developer profit are deducted. Reports the maximum land bid
+    and, if an asking price is given, the headroom and profit on cost at that price.
+
+    Args:
+        stabilised_value: Property value when stabilised (same currency as costs).
+        hard_costs: Building construction costs.
+        soft_costs: Design, permits, fees, marketing, technical services.
+        ffe_ose: Furniture, fixtures, equipment and operating supplies.
+        site_works: Earthworks, infrastructure, landscaping.
+        preopening_working_capital: Pre-opening expenses and opening working capital.
+        contingency_pct_of_hard: Contingency as a share of hard and site costs.
+        deferral_years: Years from today until stabilisation.
+        discount_rate: Rate used to defer the stabilised value to today.
+        construction_ltc: Construction loan as a share of development cost excluding land.
+        construction_interest_rate: Construction loan interest rate.
+        construction_years: Construction period in years.
+        average_drawn_fraction: Average drawn share of the construction loan over the period.
+        financing_fees_pct: Arrangement fees as a share of the loan.
+        developer_profit_pct_on_cost: Required developer profit on cost including finance.
+        land_transaction_costs_pct: Transfer tax and fees on the land, to net the bid.
+        asking_land_price: Vendor's asking price, to report headroom.
+    """
+    result = _guard(
+        _residual_land_value, stabilised_value, hard_costs, soft_costs, ffe_ose, site_works, preopening_working_capital,
+        contingency_pct_of_hard, deferral_years, discount_rate, construction_ltc, construction_interest_rate, construction_years,
+        average_drawn_fraction, financing_fees_pct, developer_profit_pct_on_cost, land_transaction_costs_pct, asking_land_price,
+    )
+    return _dump(result.to_dict())
+
+
 VALUATION_TOOLS = [
     compute_wacc,
     lever_beta,
@@ -443,4 +638,8 @@ VALUATION_TOOLS = [
     max_entry_multiple_for_target_irr,
     build_football_field,
     financial_calculator,
+    hotel_market_study,
+    hotel_fixvar_proforma,
+    hotel_mortgage_equity_valuation,
+    residual_land_value,
 ]

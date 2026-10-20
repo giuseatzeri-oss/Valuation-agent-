@@ -15,6 +15,13 @@ A full valuation triangulates at least three lenses, when the inputs allow it:
 3. Returns - lbo_returns or max_entry_multiple_for_target_irr when a financial buyer is a plausible owner.
 Finish with build_football_field and state a central value and a range.
 
+For hotels and resorts, follow the HVS sequence with the dedicated tools:
+1. RNAADR - hotel_market_study: competitive set, base-year demand by segment, fair share and penetration indices, latent and induced demand, new supply, then the subject's occupancy, ADR and RevPAR for ten years.
+2. FIXVAR - hotel_fixvar_proforma: the fixed and variable component statement down to net operating income after management fees, fixed charges and a reserve for replacement.
+3. HMEV - hotel_mortgage_equity_valuation: the simultaneous valuation formula with the loan triangulated on LTV, debt coverage and debt yield, and the equity residual at the terminal cap rate.
+4. Greenfield - residual_land_value: the stabilised value deferred to today less development, financing and profit, against the asking land price.
+Cross-check the mortgage-equity value with dcf_valuation at the WACC, with precedent_transactions on value per key and EV / EBITDA, and summarise in the football field.
+
 Quick questions deserve quick answers: a single multiple check or an IRR does not need the full process.
 
 ## Inputs and assumptions
