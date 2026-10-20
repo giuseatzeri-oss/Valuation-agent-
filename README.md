@@ -101,6 +101,14 @@ print(dcf_valuation([111, 127, 143, 159, 175], r.wacc, terminal_growth=0.025, mi
 - `vt_valuation_agent/report.py` is the offline path that renders a markdown summary from a
   spec (see `examples/sample_target.json` for the format).
 
+## Operating procedure
+
+`docs/SOP_project_validation_and_IM.md` is the standard operating procedure the agent follows for
+development and hospitality assets: reference tables (standards, data sources, KPI formulas,
+benchmark ranges, tool coverage) and the phase-by-phase process from intake through market
+validation, residual land value, financial modelling, validation gates, IM assembly, teaser and
+outreach, trainee mentorship and quality control.
+
 ## Conventions
 
 - Rates are decimals (`0.095` is 9.5%); money is in one consistent unit, usually millions.
