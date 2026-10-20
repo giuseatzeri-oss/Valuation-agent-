@@ -13,6 +13,7 @@ EXPECTED_TOOLS = {
     "trading_comps", "precedent_transactions", "lbo_returns", "max_entry_multiple_for_target_irr",
     "build_football_field", "financial_calculator",
     "hotel_market_study", "hotel_fixvar_proforma", "hotel_mortgage_equity_valuation", "residual_land_value",
+    "residential_absorption", "development_cash_flow", "equity_waterfall",
 }
 
 

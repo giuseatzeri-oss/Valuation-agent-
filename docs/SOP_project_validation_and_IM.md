@@ -1,320 +1,306 @@
-# Memorandum: Agent Standard Operating Procedure for Project Validation and Investment Memorandum Preparation
+# Agent Operating Procedure: Project Validation, Feasibility, Valuation and Investment Memoranda
 
-**To:** VT Capital Asset Management, Investment Team
+**To:** VT Capital Asset Management Investment Committee, Investment Team and AI Agents
 **From:** VT Capital Valuation Agent (operating procedure)
 **Date:** 20 October 2026
-**Subject:** Reference tables and the end-to-end process the agent follows to validate project targets (RNAADR, FIXVAR, HMEV, residual land value) and prepare investor deliverables
+**Subject:** How the agent executes the Institutional Standard Operating Procedure v2.0 (21 October 2026): reference tables, tool coverage and the step-by-step procedure for each SOP
 
-This memorandum has two parts. Part A is the reference base: the standards, data sources, formulas, benchmark ranges and tools the agent relies on. Part B is the procedure itself, phase by phase, with the validation gates that have to be passed before a number reaches an investor document. For hotels and resorts the procedure follows the HVS sequence: the built-up approach based on an analysis of lodging activity for market penetration and rate (RNAADR), the fixed and variable component approach for the ten-year forecast of revenue and expense (FIXVAR), the mortgage-equity technique for value (HMEV) and, for greenfield sites, the residual land value. The corporate house process already encoded in the agent (WACC from components, DCF both ways, comps and precedents, sensitivities, football field) remains the cross-check.
+This document is the agent's implementation of VT Capital Asset Management's Institutional Standard Operating Procedure v2.0 ("the SOP"). Where the two differ, the SOP governs and this document is corrected. Part A holds the reference tables: the master methodology table with the agent tool that executes each method, the external frameworks and data sources, the formulas, the asset-class drivers, the validation controls, the agent roles and the evidence grades. Part B walks through SOP 01 to SOP 11 and states what the agent does at each step, with which tool, and what it will not do without a human.
 
-Every benchmark range in this document is an indicative starting point for the assumptions log, not a sourced fact for a specific project. The agent must replace each one with a project-specific figure and a citation before it is used in a deliverable.
+Core workflow: Origination, Screening, RNAADR market research, FIXVAR operating forecast, HMEV / DCF valuation, Development appraisal, Debt and equity underwriting, Risk validation, Investment Committee, IM, Investor outreach.
+
+Methodology note, carried over from the SOP: RNAADR, FIXVAR and HMEV are working labels for the analytical approaches VT Capital describes. The agent's tools implement those approaches from first principles. Equivalence to specific proprietary HVS workbooks is not independently verified and the agent does not assert HVS certification. The Advanced Concepts workbook and any proprietary RNAADR, FIXVAR or HMEV files have not been audited; week 1 of the roadmap covers that.
+
+Every benchmark range in this document is an indicative starting point for the assumptions log, graded C (estimated) until replaced with a project-specific, dated, sourced figure.
 
 ---
 
 ## Part A. Reference tables
 
-### A1. Standards and methodological references
+### A1. Master methodology reference table and agent tool coverage
+
+| Ref. | Method | Principal output | Agent tool | Status |
+|---|---|---|---|---|
+| M01 | RNAADR | Room-night demand, occupancy, ADR | `hotel_market_study` | Available |
+| M02 | Competitive penetration | Market share versus fair share | `hotel_market_study` (base-year table and projected subject penetration) | Available |
+| M03 | Latent demand | Unaccommodated and induced demand | `hotel_market_study` (`unaccommodated_demand`, `induced_demand`) | Available |
+| M04 | FIXVAR | Ten-year operating P&L | `hotel_fixvar_proforma` | Available |
+| M05 | USALI framework | Consistent hospitality classifications | Line structure of `hotel_fixvar_proforma` (departmental, undistributed, management fees, fixed charges, reserve) | Available |
+| M06 | HMEV | Mortgage-equity property value | `hotel_mortgage_equity_valuation`; cross-checked with `dcf_valuation` and `compute_wacc` | Available |
+| M07 | Debt sizing | LTV, DSCR and debt yield constraints | `hotel_mortgage_equity_valuation` (minimum of the three governs) | Available |
+| M08 | Residual Land Value | Maximum supportable land price | `residual_land_value` (preliminary) and `development_cash_flow` (discounted, from dated cash flows) | Available |
+| M09 | Development DCF / FCFE | NPV, project and equity IRR | `development_cash_flow` | Available |
+| M10 | Equity waterfall | JV distributions and sponsor promote | `equity_waterfall` | Available |
+| M11 | Residential absorption | Sales pace and cash receipts | `residential_absorption` | Available |
+| M12 | Scenario analysis | Downside, base and upside | `dcf_sensitivity` plus re-runs of the chain under each case; `build_football_field` | Available |
+| M13 | Investment committee | Decision and conditions | Agent drafts the committee memorandum; decision is human | Human |
+| M14 | IM, teaser and data room | Investor deliverables | Agent drafts; human approval before external distribution | Human-gated |
+| Support | Cost of capital, relative value, acquisition returns, calculator | WACC, comps, precedents, LBO, NPV / IRR | `compute_wacc`, `lever_beta`, `project_free_cash_flows`, `trading_comps`, `precedent_transactions`, `lbo_returns`, `max_entry_multiple_for_target_irr`, `financial_calculator` | Available |
+
+### A2. External reference frameworks and data sources
+
+Reference sources are recorded with dates and reliability ratings in the source register.
 
 | Area | Reference | How the agent uses it |
 |---|---|---|
-| Valuation standards | RICS Valuation Global Standards ("Red Book", current edition); International Valuation Standards (IVSC, current edition) | Bases of value (market value, investment value), reporting content, assumptions and special assumptions, hierarchy of inputs |
-| Development valuation | RICS professional standard "Valuation of development property" (2019, effective 2020) | Residual method structure, requirement to run both a static residual and a cash-flow residual, risk and sensitivity disclosure |
-| Hotel accounting | Uniform System of Accounts for the Lodging Industry (USALI, HFTP and AHLA, current edition) | Departmental revenue and expense structure, GOP, management fees, fixed charges, FF&E reserve, NOI definitions |
-| Hotel valuation | HVS hotel valuation methodology; Appraisal Institute hospitality guidance | Income capitalisation of stabilised NOI, discounted cash flow with ramp-up, value per key cross-checks |
-| Market study (RNAADR) | Rushmore and Baum, *Hotels and Motels: Valuations and Market Studies* (Appraisal Institute); HVS built-up approach based on an analysis of lodging activity | Competitive set definition, competitive weighting, HARC, demand segmentation, unaccommodated and induced demand, fair share, market share and penetration indices, ADR by segment |
-| Forecast of revenue and expense (FIXVAR) | HVS fixed and variable component approach; USALI line structure | Base statement at base occupancy and ADR, fixed and variable shares by line, variability indices, inflation to nominal currency, reserve for replacement |
-| Mortgage-equity valuation (HMEV) | HVS simultaneous valuation formula; Appraisal Institute mortgage-equity (Ellwood and Akerson) literature | Loan sizing on LTV, debt coverage ratio and debt yield; equity yield rate; ten-year hold; terminal capitalisation; equity residual |
-| Cost of capital | CAPM; Damodaran country risk and equity risk premium datasets; Kroll (Duff and Phelps) size premium studies; sovereign yields from the ECB and national treasuries | Inputs to the agent's `compute_wacc` and `lever_beta` tools; regional risk premia for Mediterranean jurisdictions |
-| Private equity real estate reporting | INREV Guidelines; ILPA Principles; Invest Europe Handbook | Definitions of IRR, equity multiple, DPI, fee and carried-interest disclosure, waterfall reporting |
-| Sustainability and regulation | EU Taxonomy, EU Energy Performance of Buildings Directive, BREEAM and LEED, GRESB | ESG section of the IM, capex implications, financing eligibility (green loans) |
-| Planning and coastal law | National and regional zoning, coastal protection regimes (e.g. Spain's Ley de Costas, Italian landscape and cultural heritage codes, Greek spatial planning frameworks), local master plans | Buildability, setbacks, height and density limits; always confirmed by local counsel, never assumed |
-| Investor communications | Local securities marketing rules (AIFMD marketing provisions, national regulator guidance), firm compliance manual | Forward-looking statement language, disclaimers, NDA and selective disclosure discipline |
+| Hotel market and valuation methodology | HVS published methodologies (subject to licensing); Rushmore and Baum, *Hotels and Motels: Valuations and Market Studies* (Appraisal Institute) | Built-up demand analysis, fixed and variable forecasting, mortgage-equity technique, as working labels only |
+| Hotel accounting | USALI (HFTP and AHLA, current edition) | Departmental and undistributed classifications, GOP, management fees, fixed charges, reserve, NOI |
+| Valuation standards | RICS Valuation Global Standards (Red Book), IVS, RICS *Valuation of development property* | Bases of value, assumptions and special assumptions, residual method structure and risk disclosure |
+| Hotel benchmarks | STR / CoStar comp-set reports, HotStats | Occupancy, ADR, RevPAR, segmentation, seasonality, operating ratios |
+| Tourism and macro | Local tourism statistics (ISTAT, Saudi Tourism Authority and GASTAT, UAE DET and DCT, VisitBritain and ONS), UN Tourism, airport traffic statistics, central banks and the IMF | Demand growth by segment and feeder market, inflation, risk-free rates |
+| Transactions and yields | Comparable transactions (MSCI Real Capital Analytics, broker deal lists, announcements), broker investment outlooks | Terminal and going-in cap rates, value per key, precedent EV / EBITDA |
+| Costs | Contractor quotations and quantity surveyor cost plans; Turner and Townsend and Arcadis cost surveys | Hard, site and soft costs per sqm and per key |
+| Debt | Bank term sheets and lender soundings | Interest rate, amortisation, maturity, maximum LTV, minimum DSCR, minimum debt yield, fees, covenants |
+| Residential | Notarial and cadastral records, developer price lists, sold-out timelines, branded residences research | Achieved price per sqm, absorption, branded premium |
+| Regulation | Local planning and coastal law; securities marketing rules in each jurisdiction | Buildability; whether placement, introductions or transaction-linked remuneration are regulated activities |
 
-### A2. Data sources by workstream
+### A3. Formulas (as stated in the SOP, with the tool fields that implement them)
 
-| Workstream | Primary sources | Secondary sources | Agent treatment |
-|---|---|---|---|
-| Hotel performance benchmarks | STR (CoStar) comp-set reports: occupancy, ADR, RevPAR, supply and demand; HotStats P&L benchmarks | HVS, CBRE Hotels, Horwath HTL, Cushman and Wakefield hospitality research, operator fact sheets | Comp set defined by positioning, not geography alone; trailing 12 months and 5-year history; seasonality by month |
-| Residential pricing and absorption | Notarial and cadastral transaction records; developer price lists; sold-out timelines of comparable schemes | Knight Frank Wealth Report and prime indices, Savills branded residences research, Idealista and similar portals, Eurostat and ECB house price indices | Asking prices discounted to achieved prices; branded premium evidenced by paired comparables, not assumed |
-| Tourism demand | National statistics offices (INE, ISTAT, ELSTAT, INE Portugal), UN Tourism barometer, airport authority traffic statistics, Eurocontrol | Airline schedule data, cruise and marina operator statistics, destination marketing organisations | Feeder-market split, seasonality, length of stay, growth versus supply pipeline |
-| Construction costs | Local quantity surveyor cost plans; tender returns on comparable projects | RICS BCIS, Turner and Townsend International Construction Market Survey, Arcadis International Construction Costs | Cost per sqm GFA and per key by specification tier; escalation to midpoint of construction |
-| Yields and transaction evidence | Hotel and residential transaction databases (MSCI Real Capital Analytics, agent deal lists), broker investment outlooks (CBRE, JLL, Savills, Cushman and Wakefield) | HVS European Hotel Valuation Index, published deal announcements | Exit yields by market, brand tier and vintage; value per key; precedent EV to EBITDA via the agent's `precedent_transactions` tool |
-| Macro and rates | ECB, IMF World Economic Outlook, OECD, national central banks | Bank lending surveys, sovereign spreads | Risk-free rate, inflation for cost and ADR escalation, debt pricing |
-| Site and legal | Title deeds, cadastral plans, topographical and geotechnical surveys, environmental impact assessments, planning certificates | Satellite imagery, drive-time analysis, infrastructure plans | Buildable area, constraints register, permitting timeline and risk |
-
-### A3. Key performance indicators and formulas
-
-| KPI | Formula | Notes and sanity checks |
+| Quantity | Formula | Tool implementation |
 |---|---|---|
-| Occupancy | Rooms sold / rooms available | Stabilised occupancy should not exceed the comp set's stabilised level without a documented demand gap |
-| ADR | Rooms revenue / rooms sold | Premium to comp set must be justified by product, brand and scarcity |
-| RevPAR | Occupancy x ADR | Primary top-line driver; compare index to comp set (RevPAR index) |
-| TRevPAR | Total hotel revenue / rooms available | Captures F&B, spa, beach club and other ancillary revenue |
-| GOP and GOP margin | Total revenue less departmental and undistributed expenses; GOP / total revenue | Luxury resorts typically 30 to 40 percent; above 45 percent needs explanation |
-| GOPPAR | GOP / rooms available | Profit benchmark per key |
-| Management fees | Base fee (percentage of total revenue) plus incentive fee (percentage of GOP or adjusted GOP) | Indicative: base 2 to 3 percent, incentive 8 to 10 percent; confirm against the HMA term sheet |
-| FF&E reserve | Percentage of total revenue set aside for renewals | Indicative 3 to 5 percent, stepping up over the first years of operation |
-| NOI (hotel EBITDA after reserve) | GOP less management fees, fixed charges and FF&E reserve | The figure capitalised at exit; the IM's "stabilised EBITDA" must state whether it is before or after the reserve |
-| Gross development value (GDV) | Hotel exit value (stabilised NOI / exit yield) plus net residential sales plus ancillary asset values | Residential sales net of selling costs, brand licence fees and VAT where applicable |
-| Total development cost (TDC) | Land plus hard costs plus site infrastructure plus soft costs plus FF&E and OS&E plus pre-opening plus contingency plus finance costs | Stated with and without land, and with and without finance, so that the residual can be read directly |
-| Residual land value (RLV) | GDV less TDC excluding land less finance costs less required developer profit | The maximum justifiable land price; compare to the asking price and the vendor's expectations |
-| Profit on cost | (GDV less TDC) / TDC | Indicative requirement 15 to 20 percent for resort development, higher where planning risk is retained |
-| Profit on GDV | (GDV less TDC) / GDV | Alternative presentation used by some lenders |
-| Yield on cost | Stabilised NOI / TDC (hotel component) | Should exceed the exit yield by a development margin, typically 150 to 300 basis points |
-| Exit yield (cap rate) | Stabilised NOI / exit value | Benchmarked to transaction evidence by market and brand tier |
-| Value per key | Hotel value / number of keys | Cross-check against transactions; the old rule of thumb (roughly 1,000 x ADR) is a coarse sanity check only |
-| Cost per key | Hotel TDC / number of keys | Compare to value per key; a cost per key above value per key fails the residual |
-| Absorption rate | Units sold per month (or per quarter) | Must be at or below the achieved pace of comparable schemes; branded product may sell faster but not without evidence |
-| Sell-out period | Units / absorption rate | Drives the cash-flow residual; test with a 6 and 12 month slip |
-| Unlevered project IRR | Rate at which the NPV of development and operating cash flows (before debt) is zero | Compared to the project WACC and to the target return for the risk stage |
-| Levered (equity) IRR | IRR of equity contributions and distributions after debt service | Reported alongside the equity multiple; leverage increases dispersion, not only returns |
-| Equity multiple (MOIC) | Total distributions / total equity contributed | Report with the hold period; a 2.0x over 8 years is a very different deal from 2.0x over 4 |
-| Payback period | First year in which cumulative distributions equal contributed equity | State whether undiscounted or discounted |
-| DSCR | Cash flow available for debt service / debt service | Covenant typically 1.20x to 1.35x for stabilised hotels; interest cover during ramp-up tested separately |
-| LTC and LTV | Loan / total cost; loan / value | Indicative development LTC 50 to 60 percent; confirm with lender soundings |
-| FCFE | NOI less capex less interest less principal plus net new borrowing | The basis for the equity waterfall and for the FCFE projection in the model |
-| Waterfall tiers | Return of capital, preferred return, catch-up, carried interest split | Documented per the shareholders' or LP agreement; the agent models tiers exactly as drafted, never from memory |
-| Break-even occupancy | Occupancy at which NOI covers debt service (or fixed costs) | Headline downside statistic for the IM risk section |
-| Historic average room count (HARC) | Rooms x share of the base year the hotel was open | Puts a hotel that opened or closed mid-year on a comparable footing |
-| Effective rooms | HARC x competitive weight (1.0 primary, lower for secondary) | Basis for fair share |
-| Accommodated room nights | HARC x 365 x occupancy x segment share | Summed over the set to give base-year demand by segment |
-| Fair share | Hotel effective rooms / market effective rooms | What the hotel would capture if all hotels were equally competitive |
-| Market share | Hotel room nights in the segment / segment room nights | Observed capture |
-| Penetration (competitive) index | Market share / fair share | Above 1.0 outperforms the set in that segment; the subject's index is projected per segment per year and ramps to stabilisation |
-| Unaccommodated demand | Room nights turned away because of capacity constraints, as a share of accommodated demand | Added to market demand when new supply opens; evidenced by peak-period sell-outs |
-| Induced demand | Room nights created by a new generator (the subject's facilities, a new convention centre, a marina) | Added per year; must be tied to a named generator |
-| Variability index | Projected utilisation / base utilisation in real terms (occupancy, department revenue or total revenue) | Drives the variable component of every FIXVAR line |
-| FIXVAR line projection | Base x inflation factor x (fixed share + variable share x variability index) | Rooms expense: fixed 50 to 70 percent on occupancy; undistributed: on total revenue; property tax and insurance: fixed |
-| Mortgage constant | Annual debt service / loan, for the amortisation term and payment frequency | Converts the loan into the debt service deducted from NOI |
-| Loan sizing tests | LTV x value; NOI year 1 / (DCR x constant); NOI year 1 / debt yield | The most restrictive loan governs the concluded value |
-| Simultaneous valuation formula | V = (PV of NOI years 1 to n at the equity yield + net reversion discounted n years) / (1 - M + f M a_n + M P_n d_n) | M = LTV, f = mortgage constant, a_n = annuity factor, P_n = loan balance share after n years, d_n = single discount factor |
-| Equity residual | Year n+1 NOI / terminal cap rate, less selling costs, less the loan balance | Discounted at the equity yield and added to the discounted equity cash flows |
-| Going-in capitalisation rate | NOI year 1 / value | Reasonableness check against transaction evidence and the terminal rate |
+| Effective rooms | Rooms x competitive weight | `Competitor.rooms x competitive_weight` (and `fraction_open` for HARC) |
+| HARC | Rooms x days open / days in year | `rooms x fraction_open` |
+| Accommodated room nights | Rooms x days open x occupancy | `HARC x 365 x occupancy` |
+| Segment room nights | Accommodated room nights x segment share | `segmentation` shares (sum to 1) |
+| Fair share | Effective available room nights / total effective available room nights | `fair_share` per competitor and `subject_fair_share` per year |
+| Market share | Room nights captured / total market room nights | `market_share`, `subject_market_share` |
+| Penetration index | Market share / fair share | `penetration_by_segment` (base year); `SubjectHotel.penetration` per segment per year (projected) |
+| Blended ADR | Sum(segment room nights x segment ADR) / total room nights | `subject_adr` from `segment_adr` and `subject_room_nights_by_segment` |
+| RevPAR | ADR x occupancy | `subject_revpar` |
+| FIXVAR line | Inflated fixed base + inflated variable base x (forecast utilisation / base utilisation) | `base_amount x inflation x (fixed_pct + (1 - fixed_pct) x index ratio)`; index is occupancy, department revenue or total revenue, measured in real terms |
+| Debt by LTV | Property value x maximum LTV | `loan_to_value` (solved simultaneously with value) |
+| Debt by DSCR | NOI / (minimum DSCR x debt constant) | `debt_coverage_ratio`, `mortgage_constant`, `sizing_year` |
+| Debt by yield | NOI / minimum debt yield | `debt_yield` |
+| Maximum debt | Minimum of the three constraints | `binding_constraint`, `loan` |
+| Annual equity cash flow | Property cash flow less debt service less applicable additional costs | `equity_cash_flows` |
+| Terminal value | Year-11 NOI / terminal capitalisation rate | `reversion_gross` from `net_income[n]` |
+| Net sale proceeds | Terminal value less selling costs less outstanding debt | `reversion_net`, `loan_balance_at_reversion`, `equity_residual` |
+| Mortgage-equity value | Initial mortgage balance + PV of equity cash flows and equity reversion at the equity yield | `value` (closed-form simultaneous solution for LTV; direct for DSCR and debt yield) |
+| Preliminary RLV | Completed development value less development costs less financing costs less required developer profit | `residual_land_value` with deferral of the completed value |
+| Discounted RLV | Land payment at which the dated project cash flow earns the required project return | `development_cash_flow.discounted_residual_land_value` |
+| Unlevered IRR, NPV | From dated project cash flows before debt | `unlevered_irr`, `unlevered_npv_at_hurdle` |
+| Equity IRR, multiple, payback | From equity cash flows after construction debt | `equity_irr`, `equity_multiple`, `equity_payback_year` |
+| Waterfall tier | Distributions to capital until the hurdle IRR is met, remainder as promote; optional catch-up to a target promote share | `WaterfallTier(hurdle_irr, capital_share)`, `catch_up_pct`, `catch_up_to_promote` |
 
-### A4. Indicative benchmark ranges for the assumptions log
+Worked examples from the SOP that the agent's test suite reproduces: 120 rooms open 300 days at 65 percent give 23,400 accommodated room nights and, at a 60 percent leisure share, 14,040 leisure room nights; a EUR 1.0m base rooms expense, 60 percent fixed, with occupancy rising from 70 to 80 percent gives EUR 600,000 fixed plus EUR 457,143 variable, EUR 1,057,143 before inflation.
 
-These are starting points for a Mediterranean luxury resort with branded residences. Each must be replaced with a project-specific, sourced figure before use.
+### A4. Asset-specific underwriting drivers (SOP 06)
+
+| Asset class | Critical drivers | Agent approach |
+|---|---|---|
+| Urban hotel | Corporate demand, ADR, occupancy | RNAADR with commercial and meeting segments weighted; FIXVAR; HMEV |
+| Luxury resort / glamping | Seasonality, ADR, infrastructure, utilisation | RNAADR with leisure and group segments and a seasonality check; infrastructure in `development_cash_flow` cost items |
+| Branded residences / condo hotel | Sale price, absorption, brand fees, rental structure | `residential_absorption` with brand fee; rental pool income as other income |
+| Wellness / longevity spa | Treatment utilisation, staffing, equipment, memberships | FIXVAR revenue line driven by treatments x yield; expense index on department revenue |
+| Golf resort | Rounds, membership, course maintenance | FIXVAR revenue line driven by rounds and memberships; maintenance as a largely fixed expense |
+| Houseboat | Fleet utilisation, mooring, maintenance | Unit-based occupancy model analogous to rooms; mooring and maintenance fixed |
+| Restaurant | Covers, spend, food and labour costs | Covers x average spend; food cost variable, labour partly fixed |
+| Heritage hotel | Conversion costs and preservation constraints | Cost items with contingency; constraints register in screening |
+| Serviced apartments | Length of stay, occupancy, operating cost | RNAADR with extended-stay segment; lower departmental cost base |
+
+Mixed-use components are underwritten individually, then consolidated. Hotel room-night models are not applied mechanically to non-lodging assets.
+
+### A5. Validation controls (SOP 09) and evidence grades
+
+| Control | Pass condition | Agent check |
+|---|---|---|
+| Demand and occupancy | Demand balances; occupancy 0 to 100 percent | Allocated room nights reconcile to market demand and inventory; tool warnings above 80 percent occupancy and 1.3x penetration resolved |
+| ADR and room revenue | Benchmarked and arithmetically reconciled | Rooms revenue equals room nights x ADR; ADR index evidenced against the comp set |
+| Expenses and EBITDA | Cost drivers and P&L reconcile | Every FIXVAR line has a stated driver, fixed share and source; GOP and NOI margins inside comp-set ranges |
+| Debt | Balances, fees, service and covenants reconcile | Minimum of LTV, DSCR and debt yield governs; debt service covered in every year; `development_cash_flow` balance returns to zero at exit |
+| Exit | Forward NOI, cap rate, costs and debt consistent | Terminal rate above going-in unless justified; net proceeds after selling costs and outstanding debt |
+| Returns | IRR and multiple reconcile to cash flows | HMEV `equity_irr_check` equals the equity yield; unlevered DCF within a defensible band of the HMEV value |
+| Development | Costs, timing and RLV consistent | Preliminary and discounted residuals reconciled, differences explained by timing |
+| Sources and uses | Funding sources equal uses | Land plus costs plus finance equals equity plus debt in every period |
+
+Evidence grades: A verified, B corroborated, C estimated, D unverified. Material D-grade assumptions block unconditional investment approval. The agent maintains the source register, the assumptions log and the version history; the independent reviewer signs off.
+
+### A6. Agent roles and the human approval boundary (SOP 10)
+
+| Agent role | Output | Tools the role uses |
+|---|---|---|
+| Chief Strategy Officer | Investment priorities | None (judgement and screening criteria) |
+| Chief Development Officer | Origination pipeline | Project register (SOP 01) |
+| Market Intelligence | RNAADR and market feasibility | `hotel_market_study` |
+| Hospitality Operations | FIXVAR and operating projections | `hotel_fixvar_proforma`, `project_free_cash_flows` for non-hotel components |
+| Valuation | HMEV, DCF and value reconciliation | `hotel_mortgage_equity_valuation`, `compute_wacc`, `lever_beta`, `dcf_valuation`, `trading_comps`, `precedent_transactions` |
+| Development | CAPEX, phasing and RLV | `residual_land_value`, `development_cash_flow`, `residential_absorption` |
+| Debt Advisory | Debt sizing and financing terms | `hotel_mortgage_equity_valuation` sizing, `development_cash_flow` financing, `lbo_returns` |
+| Chief Investment Officer | Integrated underwriting model | All of the above; `dcf_sensitivity`, `build_football_field` |
+| Chief Risk Officer | Independent validation | Re-runs with independent inputs; validation controls in A5 |
+| Legal and Compliance | Regulatory and document checks | None; flags items for human counsel |
+| Capital Markets | IM and investment teaser | Drafting from the approved model version |
+| Investor Relations | Investor matching and correspondence | Drafting; sending is human |
+| Training | Annotated models and case studies | Annotation of every tool call and assumption |
+
+Human approval is required for final investment recommendations, legal opinions, regulatory determinations, contractual commitments and external distribution.
+
+### A7. Indicative benchmark ranges for the assumptions log (grade C until replaced)
 
 | Assumption | Indicative range | Replace with |
 |---|---|---|
-| Hotel ramp-up to stabilisation | 3 to 4 operating years; e.g. year 1 at 75 percent of stabilised RevPAR, year 2 at 90 percent | Operator's underwriting, comp-set openings history |
-| Stabilised occupancy, seasonal luxury resort | 55 to 70 percent annual (with peak months above 90 percent) | STR comp set, seasonality calendar |
-| ADR premium for new branded luxury supply | 10 to 30 percent over the existing comp set | Paired comparables, operator pipeline data |
-| Branded residence price premium | 20 to 35 percent over comparable unbranded product in the same location | Paired transactions, Savills and Knight Frank branded residences research |
-| Brand licence or marketing fee on residential sales | 3 to 5 percent of gross sales | Residential licence agreement term sheet |
-| Soft costs | 12 to 20 percent of hard costs | Consultant fee proposals, permit tariffs |
-| Contingency | 5 to 10 percent of hard costs, higher pre-tender | Quantity surveyor's risk register |
-| FF&E and OS&E | Per key, by brand tier; confirm against the brand's technical services standards | Operator's technical services budget |
-| Pre-opening and working capital | Several months of operating expenses plus sales and marketing | Operator's pre-opening budget |
-| Developer profit requirement | 15 to 20 percent on cost | Investment committee return policy |
-| Exit yield, luxury resort hotel, prime Mediterranean | Benchmark to current transaction evidence; test plus and minus 50 basis points | Broker investment outlooks, MSCI, deal announcements |
-| Discount rate, development stage | Project WACC plus a development risk premium that falls as planning, procurement and pre-sales de-risk the project | `compute_wacc` plus a documented stage premium |
-| Equity yield rate (HMEV) | Before-tax equity yield reflecting the asset's risk; test a 200 basis point band | Investor surveys, sponsor return policy, recent hotel equity raises |
-| Hotel mortgage terms | Interest rate, 20 to 25 year amortisation, LTV 55 to 65 percent, DCR 1.30x to 1.50x, debt yield 9 to 11 percent | Lender soundings for the specific asset and market |
-| Terminal capitalisation rate | Going-in rate plus 50 to 100 basis points for a ten-year hold | Transaction evidence, broker outlooks |
-| Reserve for replacement | 4 percent of total revenue (HVS convention), lower in opening years | Hotel management agreement |
-| Rooms department expense split | 50 to 70 percent fixed, 30 to 50 percent variable with occupancy | Comparable operating statements, HotStats |
-
-### A5. Agent tool coverage
-
-| Process step | Agent tool | Status |
-|---|---|---|
-| RNAADR market study: competitive set, HARC, base-year demand by segment, fair share, market share, penetration indices, latent and induced demand, new supply, subject occupancy, segment ADR, blended ADR and RevPAR by year | `hotel_market_study` | Available |
-| FIXVAR forecast of revenue and expense: base statement, fixed and variable shares, variability indices, inflation, departmental and undistributed expenses, management fees, fixed charges, reserve for replacement, NOI | `hotel_fixvar_proforma` | Available |
-| HMEV mortgage-equity valuation: mortgage constant, loan sizing on LTV, DCR and debt yield, equity cash flows, equity residual at the terminal cap rate, simultaneous valuation formula, going-in cap rate, value per key | `hotel_mortgage_equity_valuation` | Available |
-| Residual land value for a greenfield project: stabilised value deferred to today less development, financing and developer profit, headroom against the asking price | `residual_land_value` | Available |
-| Cost of equity, WACC, beta levering (discount rate for the unlevered DCF cross-check) | `compute_wacc`, `lever_beta` | Available |
-| Unlevered DCF cross-check of the mortgage-equity value, with implied exit multiple and implied growth | `dcf_valuation`, `dcf_sensitivity` | Available |
-| Operating projection from growth, margin and reinvestment assumptions (non-hotel components) | `project_free_cash_flows` | Available |
-| Trading comparables and precedent transactions (value per key, EV to EBITDA) | `trading_comps`, `precedent_transactions` | Available |
-| Sponsor returns and ability to pay at a target IRR | `lbo_returns`, `max_entry_multiple_for_target_irr` | Available |
-| Range synthesis | `build_football_field` | Available |
-| NPV, IRR and CAGR on arbitrary series (construction draws, waterfall flows) | `financial_calculator` | Available |
-| Residential sales schedule (unit mix, pricing, absorption, deposits) for mixed-use schemes | Manual build with `financial_calculator` | Planned as a tool |
-| Monthly development cash flow with S-curve draws and capitalised interest | Manual build with `financial_calculator`; `residual_land_value` uses an average-drawn approximation | Planned as a tool |
-| Equity waterfall (return of capital, preferred return, catch-up, promote) | Manual build with `financial_calculator` | Planned as a tool |
-| Mapping of the RNAADR, FIXVAR and HMEV workbooks | Sheet-by-sheet mapping of inputs to tool parameters | Pending receipt of the workbooks |
-
----|---|---|
-| Cost of equity, WACC, beta levering | `compute_wacc`, `lever_beta` | Available |
-| Operating cash-flow projection from growth, margin and reinvestment assumptions | `project_free_cash_flows` | Available (corporate form; used for the stabilised hotel operating company) |
-| Discounting, terminal value, enterprise to equity bridge | `dcf_valuation` | Available |
-| Two-way sensitivity tables | `dcf_sensitivity` | Available |
-| Trading comparables (listed hotel and resort owners, developers) | `trading_comps` | Available |
-| Precedent transactions (asset and portfolio deals, value per key cross-check through EV / EBITDA) | `precedent_transactions` | Available |
-| Sponsor returns, ability to pay at a target IRR | `lbo_returns`, `max_entry_multiple_for_target_irr` | Available |
-| Range synthesis | `build_football_field` | Available |
-| NPV, IRR and CAGR on arbitrary series (construction draws, waterfall flows) | `financial_calculator` | Available |
-| Hotel pro forma under USALI (occupancy and ADR ramp to NOI) | `hotel_proforma` | Planned |
-| Residential sales schedule (unit mix, pricing, absorption, deposits) | `residential_absorption` | Planned |
-| Development cash flow (S-curve draws, capitalised interest, funding sequence) and FCFE | `development_cash_flow` | Planned |
-| Static and cash-flow residual land value | `residual_land_value` | Planned |
-| Equity waterfall | `equity_waterfall` | Planned |
-| Mapping of the "Advanced Concepts - complete.xls" template | Sheet-by-sheet mapping of inputs to tool parameters | Pending receipt of the template |
-
-Until the planned tools ship, the agent builds the hotel pro forma, residential schedule and residual explicitly in the conversation using `financial_calculator` for every discounting step, shows each intermediate figure, and labels the result as a manual build subject to model review.
+| Hotel ramp-up to stabilisation | 3 to 4 operating years | Operator underwriting, comp-set opening histories |
+| Stabilised occupancy, seasonal luxury resort | 55 to 70 percent annual | STR comp set and seasonality calendar |
+| ADR index for new branded luxury supply | 1.10 to 1.30 of the segment | Paired comparables, operator pipeline |
+| Branded residence price premium | 20 to 35 percent over unbranded | Paired transactions, branded residences research |
+| Brand licence fee on residential sales | 3 to 5 percent | Residential licence term sheet |
+| Rooms expense split | 50 to 70 percent fixed, 30 to 50 percent variable with occupancy | Comparable statements, HotStats |
+| Replacement reserve | 4 percent of revenue is illustrative only; asset-specific | Hotel management agreement |
+| Hotel debt terms | 20 to 25 year amortisation, LTV 55 to 65 percent, DSCR 1.30x to 1.50x, debt yield 9 to 11 percent | Bank term sheets |
+| Terminal capitalisation rate | Going-in plus 50 to 100 basis points over a ten-year hold | Transaction evidence |
+| Soft costs; contingency | 12 to 20 percent of hard costs; 5 to 10 percent of hard and site costs | Fee proposals; quantity surveyor's risk register |
+| Developer profit | 15 to 20 percent on cost | Investment committee return policy |
+| Equity yield | Asset and market specific; test a 200 basis point band | Investor surveys, recent raises |
 
 ---
 
-## Part B. Memorandum: the agent's procedure
+## Part B. The agent's procedure, SOP by SOP
 
-### Phase 0. Intake, mandate and data inventory
+### SOP 01. Project intake and screening (owner: Chief Development Officer agent)
 
-1. **Define the mandate.** Asset class (coastal resort, urban mixed-use, repositioning), development stage (land option, permitted, under construction, operating), deliverable requested (feasibility note, full IM, teaser, trainee case study) and the decision it supports (land bid, equity raise, JV negotiation).
-2. **Fix conventions.** Currency and unit (EUR thousands or millions), measurement basis (gross floor area, net saleable area, keys), valuation date, price basis (nominal with explicit inflation, or real), and fiscal treatment (VAT, transfer tax, corporate tax rate).
-3. **Inventory the data room.** List every document received, its date and author. Grade each input A to D: A sourced and current, B sourced but dated or indirect, C sponsor estimate, D agent assumption. Nothing graded C or D reaches an investor document without being flagged as such.
-4. **Open the assumptions register.** One row per assumption: value, unit, source, grade, rationale, owner, sensitivity tested (yes or no). The register is the audit trail and the trainee annotation layer at the same time.
-5. **Ask before assuming** when a missing input is central (land price, key count, unit mix, operator terms, exit yield). Proceed with a labelled assumption only when the question is peripheral or the user has asked for a first cut.
+1. Register the project with a unique ID, legal owner, site location, title, planning status, asset class, development concept, indicative investment requirement, sponsor, project stage, responsible human manager and source documents.
+2. Open the source register (document, date, author, reliability rating) and the assumptions log (value, unit, source, grade A to D, rationale, owner, sensitivity tested).
+3. Fix conventions: currency and unit, measurement basis (GFA, NSA, keys), valuation date, nominal versus real, tax treatment.
+4. Record the stage and what it needs: A Screening (preliminary opportunity assessment), B Feasibility (market, title and planning investigation), C Underwriting (integrated model and financing analysis), D Committee (independent risk and model review), E Investor-ready (approved IM and controlled data room), F Execution (investor process, documentation and closing).
+5. Gate: no project advances to investor-ready status with unresolved critical ownership, planning, environmental or financial evidence gaps. The agent lists the open gaps at every stage transition.
 
-### Phase 1. Market research and target validation (RNAADR)
+### SOP 02. RNAADR market research (owner: Market Intelligence agent)
 
-Tool: `hotel_market_study`. The agent runs the built-up approach based on an analysis of lodging activity and does not accept an occupancy or ADR assumption that has not come out of it.
+Tool: `hotel_market_study`.
 
-1. **Define the market and the competitive set.** Record the primary market area and list primary and secondary competitors with room count, opening date, positioning and amenities. Give each a competitive weight (1.0 for a primary competitor, typically 0.25 to 0.75 for a secondary one) so that effective rooms reflect how directly each hotel competes. Record the share of the base year each was open to compute the historic average room count (HARC).
-2. **Segment demand.** Split each competitor's occupancy into the primary market segments (typically Commercial, Meeting and Convention, Leisure; resorts often add Group Leisure or Wholesale). Segment shares must sum to one per hotel and be evidenced by operator data, STR segmentation or interviews.
-3. **Determine base-year demand.** Accommodated room nights per segment are the sum over the set of HARC x 365 x occupancy x segment share. The tool returns the base-year table: effective rooms, fair share, room nights, market share and penetration index per segment for every competitor. Check that the competitor indices are consistent with their known positioning before going further.
-4. **Quantify latent demand.** Unaccommodated demand is entered per segment as a share of base-year accommodated demand, evidenced by peak-period sell-outs, compression nights and turn-away data. Induced demand is entered per segment per year and tied to a named generator (the subject's conference space or spa, a new marina, an airport route). Latent demand without evidence stays at zero.
-5. **Project supply and demand.** Enter segment growth rates (from tourism statistics and airline capacity), new competitive supply with opening year, first-year fraction and penetration indices, and the subject's rooms, opening fraction and penetration index per segment per year. The subject's indices ramp from below 1.0 at opening to the stabilised level that product, brand and amenities justify. The tool normalises market shares across the set in each year (the market share adjuster) and returns the subject's room nights, occupancy, market share and overall penetration by year.
-6. **Forecast ADR.** Enter market ADR by segment in base-year currency, the subject's ADR index per segment (its rate positioning against the segment at stabilisation) and an optional ramp for the opening years; the tool inflates and blends them by the subject's segment mix to give ADR, RevPAR and rooms revenue by year.
-7. **Validation tests.** The RNAADR output passes only if: stabilised occupancy is consistent with the comp set's stabilised level after new supply; the overall penetration at stabilisation is below 1.3 unless the product is demonstrably a tier above; the ADR index per segment is supported by paired comparables; and every latent-demand entry has a named source. The tool's warnings (occupancy above 80 percent, penetration above 1.3) are resolved or restated to the user.
+1. **Define the primary market area** using accessibility, feeder markets, demand generators, product positioning, seasonality and competing destinations. Identify primary and secondary competitors; secondary properties receive documented competitive weights.
+2. **Supply, historic room counts and demand.** Enter each competitor's rooms, days open (as a fraction of the year, giving HARC), occupancy and segmentation into commercial, meetings and conventions, leisure and, when material, other or contracted business. Use actual inventory dates where supply changes within a year. The tool returns effective rooms, HARC-based accommodated room nights, segment room nights, fair share, market share and penetration index per competitor.
+3. **Latent demand and market growth.** Enter unaccommodated demand (capacity constraints) and induced demand (new generators) separately, with sources, and never double count new tourism attractions or hotel-generated demand. Enter organic demand growth and competing supply by segment.
+4. **Competitive penetration.** Estimate the subject's penetration per segment per year from brand, location, amenities, distribution, management quality and stabilisation. The tool normalises shares each year so that allocated demand reconciles to forecast market demand and available inventory.
+5. **ADR and RevPAR.** Enter market ADR by segment with market-supported rate positioning for the subject and explicit nominal inflation. Public rack rates are not realised ADR. The tool blends segment ADRs by the subject's mix.
+6. **Deliverables.** Supply database, competitive-set weights, demand segmentation, historic demand, latent demand, supply additions, penetration indices, occupancy, ADR and RevPAR forecasts, all drawn from the tool output and the source register.
 
-### Phase 2. Forecast of revenue and expense (FIXVAR)
+### SOP 03. FIXVAR ten-year operating model (owner: Hospitality Operations / Financial Modelling agent)
 
-Tool: `hotel_fixvar_proforma`, fed with the RNAADR occupancy and ADR series.
+Tool: `hotel_fixvar_proforma`, with the RNAADR occupancy and ADR series.
 
-1. **Establish the base statement.** State the subject's first representative year of operation in current currency at a base occupancy and the base ADR: rooms revenue, each other operated department (F&B, spa and wellness, beach club, retail, other), departmental expenses, undistributed expenses (administrative and general, marketing, property operations and maintenance, utilities), management fees, fixed charges (property tax, insurance) and the reserve for replacement. Sources are comparable operating statements, HotStats benchmarks and the operator's underwriting.
-2. **Apply fixed and variable ratios.** Give every line a fixed share and a variability index: rooms expense 50 to 70 percent fixed on occupancy; other departmental expenses on their own department's revenue; undistributed expenses largely fixed with the variable share on total revenue; property tax and insurance fixed; the reserve as a straight percentage of total revenue (4 percent by convention, lower in opening years if the agreement allows).
-3. **Project.** The tool inflates each line to nominal currency and projects it as base x inflation x (fixed share + variable share x index ratio), where the index ratio compares the projected year to the base year in real terms. Ten years plus the reversion year are projected for the HMEV.
-4. **Read the statement.** Check departmental profit margins, GOP margin (luxury resorts typically 30 to 40 percent), NOI margin and NOI per available room against the comp set. The tool flags GOP margins above 50 percent or below 20 percent and any year of negative NOI, which must be covered by working capital in the budget.
-5. **Mixed-use components.** Residential sales, rental pools, marina and ancillary income are built alongside with their own sources and sensitivities (unit schedule, price per sqm, absorption, deposit structure, selling costs, brand licence fees); until the residential tool ships this is a manual build with `financial_calculator` and every intermediate figure shown.
+1. **Base statement.** Establish an actual, normalised or synthetic base-year statement and identify the origin of every input. Use USALI-aligned departmental classifications.
+2. **Drivers by revenue centre.** Rooms: occupied room nights x ADR. Food and beverage: covers x average spend. Spa and wellness: treatments x average yield. Golf: rounds and memberships. Events: events x revenue per event. Other departments: the relevant activity-specific utilisation. Non-rooms departments enter as revenue lines with their own fixed share; where a department's driver is not occupancy, its base amount is built from the driver outside the tool and its variable component follows the department's own revenue.
+3. **Fixed and variable components.** Forecast expense = inflated fixed base + inflated variable base x (forecast utilisation / base utilisation). Select the correct cost driver per department rather than applying occupancy universally. Fixed and variable proportions are assumptions to be benchmarked, not universal rules.
+4. **Coverage.** Rooms, F&B, spa, golf and other departmental expenses; administrative and general; sales and marketing; maintenance; utilities; IT; management fees; insurance; taxes; ground rent; replacement reserves. The 4 percent revenue reserve is illustrative only and must be asset-specific.
+5. **Outputs.** Ten-year P&L, departmental contribution, GOP, EBITDA, a consistently defined NOI / valuation cash flow, replacement reserves and sensitivities. Distinguish accounting earnings from distributable cash flow.
 
-### Phase 3. Cost build
+### SOP 04. HMEV mortgage-equity valuation (owner: Valuation agent)
 
-1. **Hard costs** per sqm of gross floor area by building type, from the quantity surveyor's cost plan, escalated to the midpoint of construction.
-2. **Site works** (earthworks, roads, utilities, landscaping, coastal works) separated from building costs.
-3. **Soft costs**: design and engineering, permits and fees, project management, legal, marketing and sales, operator technical services, insurance.
-4. **FF&E and OS&E** per key to the brand standard; **pre-opening and working capital** from the operator's budget.
-5. **Contingency** on hard and site costs, sized to the design stage.
-6. **Finance**: construction loan to cost, interest rate, period and average drawn balance, plus arrangement fees.
-7. **Land**: asking price and transaction costs, carried separately so that the residual can be solved for it.
+Tool: `hotel_mortgage_equity_valuation`, with the FIXVAR NOI for the holding period plus one year.
 
-### Phase 4. Valuation (HMEV)
+1. **Debt underwriting criteria.** Current market interest rates, amortisation, maturity, maximum LTV, minimum DSCR, minimum debt yield, fees, covenants, equity yield and holding period, from term sheets and lender soundings.
+2. **Debt sizing.** Debt by LTV = value x maximum LTV; by DSCR = NOI / (minimum DSCR x debt constant); by yield = NOI / minimum debt yield. Maximum debt is the minimum of the three, subject to additional lender tests. The DSCR and debt-yield tests use year-one NOI by default; set the sizing year to the first stabilised year when the lender sizes on stabilised income and say so.
+3. **Equity cash flow and reversion.** Annual equity cash flow = property cash flow less debt service less applicable additional costs and contributions. Year-10 terminal value = year-11 NOI / terminal capitalisation rate. Net sale proceeds = terminal value less selling costs less outstanding debt.
+4. **Value.** Mortgage-equity value = initial mortgage balance + present value of equity cash flows and equity reversion at the required equity yield. Because the LTV loan depends on value, the tool solves the simultaneous formula in closed form (equivalent to iterating to convergence) and reports an IRR check equal to the equity yield.
+5. **Cross-check.** Independently against an unlevered DCF (`compute_wacc`, `dcf_valuation`) and comparable transactions (`precedent_transactions` on value per key and EV / EBITDA). Differences are reconciled and explained, not averaged away.
 
-Tool: `hotel_mortgage_equity_valuation`, fed with the FIXVAR net operating income for the holding period plus one year.
+### SOP 05. Residual land value and development DCF (owner: Development agent)
 
-1. **Establish debt underwriting criteria.** From current lender soundings: mortgage interest rate, amortisation period, loan-to-value limit, minimum debt coverage ratio on year-one income and minimum debt yield. All three sizing tests are entered; the tool computes the loan each implies and takes the most restrictive as the loan a lender would advance. The DCR and debt-yield tests are applied to year-one income by default; when the lender sizes on stabilised income, set the sizing year to the first stabilised year and say so in the memorandum.
-2. **Determine the equity yield and reversion.** Set the before-tax equity yield rate for the asset's risk (stage, market, brand, operator), the holding period (ten years by convention), the terminal capitalisation rate applied to year-eleven income and the brokerage and legal costs at sale.
-3. **Calculate total property value.** The tool deducts annual debt service (loan x mortgage constant) from net income to give the equity cash flows, computes the equity residual (net reversion less the loan balance), discounts both at the equity yield and adds the loan. With the loan sized on LTV it solves the simultaneous valuation formula in closed form; with the loan fixed by DCR or debt yield it values directly. It reports value, loan, equity, the equity cash flows, the residual, the going-in cap rate, value per key and an IRR check that must equal the equity yield.
-4. **Reasonableness.** Going-in cap rate against transaction evidence; terminal rate above the going-in rate; value per key against precedents (`precedent_transactions`); an unlevered DCF at the WACC (`compute_wacc`, `dcf_valuation`) within a defensible band of the mortgage-equity value; debt service covered in every year (the tool warns when it is not).
+Tools: `residual_land_value`, `development_cash_flow`, `residential_absorption`.
 
-### Phase 5. Feasibility: residual land value and returns
+1. **Preliminary RLV.** Completed development value less development costs less financing costs less required developer profit, with the completed value deferred to today for development timing and stabilisation.
+2. **Discounted RLV for phased developments.** Build the dated project cash flow: acquisition, infrastructure, construction, soft costs, contingency, pre-opening, working capital, taxes, financing and disposal, with operating NOI from FIXVAR and residential receipts from `residential_absorption`. The tool returns the land payment that delivers the required project return, alongside unlevered IRR and NPV, equity IRR and multiple, peak equity and debt, payback and profit on cost.
+3. **Rule.** Do not treat a stabilised completed-property value as present-day land value without accounting for development timing, stabilisation and risk. Test the maximum supportable land price against the required project return and report headroom against the asking price.
 
-Tools: `residual_land_value`, `dcf_sensitivity`, `lbo_returns`, `build_football_field`, `financial_calculator`.
+### SOP 06. Asset-specific underwriting
 
-1. **Residual land value.** For a greenfield project the tool defers the stabilised HMEV value to today over the construction and ramp-up period, then deducts hard costs, site works, soft costs, FF&E and OS&E, pre-opening and working capital, contingency, construction financing and the required developer profit on cost. The result is the maximum justifiable land acquisition cost; against the asking price it reports headroom and profit on cost at that price.
-2. **Cash-flow residual and reconciliation.** Where the sales or ramp-up timeline is long, build the dated development cash flow and solve for the land value that delivers the target unlevered IRR with `financial_calculator`; explain any difference from the static residual by timing.
-3. **Returns to the capital structure.** Total investment (with and without land and finance), peak equity, unlevered project IRR, leveraged equity IRR, equity multiple, payback, stabilised NOI (after the reserve), yield on cost, profit on cost, DSCR through ramp-up and break-even occupancy. The equity waterfall is modelled exactly as the shareholders' or LP agreement drafts it.
-4. **Sensitivities and scenarios.** At minimum: penetration index and ADR index plus and minus 10 percent (through the RNAADR), occupancy plus and minus 5 points, hard costs plus and minus 10 percent, equity yield and terminal cap rate plus and minus 100 and 50 basis points, mortgage rate plus 100 basis points, construction delay of 6 and 12 months. Present base, downside and upside cases.
-5. **Decision test.** If the asking land price exceeds the residual, state the ADR, penetration or cost change needed to close the gap and whether the market evidence supports it. The gap is never closed by raising assumptions without new evidence.
+Apply the drivers in table A4. Underwrite mixed-use components individually, then consolidate into the development cash flow as separate income and cost lines.
 
-### Phase 6. Sanity checks and validation gates
+### SOP 06a. Debt and equity underwriting (owner: Debt Advisory agent, Chief Investment Officer agent)
 
-The agent does not release a figure to an IM draft until each gate is passed or the exception is documented in the assumptions register.
+1. Debt: the sizing tests in SOP 04 for the stabilised asset; construction loan-to-cost, rate, fees and the capitalisation of interest until opening in `development_cash_flow`; covenants tested through ramp-up.
+2. Equity: `equity_waterfall` with the tiers exactly as the shareholders' or JV agreement drafts them (preferred return hurdles, catch-up, promote splits, LP and GP co-invest shares). Report LP and GP IRR and multiples, total promote and its share of profit, and the capital IRR before promote.
+3. Acquisition cases: `lbo_returns` and `max_entry_multiple_for_target_irr` for a stabilised asset.
+4. Scenarios (M12): downside, base and upside through the whole chain, with `dcf_sensitivity` on the two assumptions that matter most and `build_football_field` to summarise.
 
-| Gate | Test | Action on failure |
-|---|---|---|
-| Penetration | Stabilised overall penetration below 1.3x fair share, each segment index evidenced | Lower the indices or document the product and brand evidence |
-| Latent demand | Every unaccommodated and induced demand entry has a named source | Set unevidenced latent demand to zero |
-| Statement ratios | GOP margin, NOI margin and NOI per available room inside comp-set ranges | Revisit the base statement and fixed shares |
-| Debt sizing | Loan equals the most restrictive of LTV, DCR and debt yield; debt service covered in every projection year | Resize the loan; report the effect on value and equity |
-| IRR check | HMEV equity IRR equals the equity yield; unlevered DCF within a defensible band of the HMEV value | Reconcile the inputs before reporting either value |
-| Terminal weight | Present value of exit below 75 percent of hotel value | Extend the explicit period or explain the exit dependence prominently |
-| Implied metrics | Implied exit multiple and implied growth within comp evidence | Revisit the exit yield or growth assumption |
-| Yield on cost spread | Yield on cost exceeds exit yield by the required development margin | The scheme does not create value; revisit cost, pricing or land |
-| Cost versus value per key | Cost per key below value per key | Residual fails; report rather than adjust |
-| Absorption realism | Sell-out period within observed comparables | Slow the schedule and re-run the cash-flow residual |
-| Leverage | DSCR and LTC inside lender terms through ramp-up | Resize debt or add equity; report the effect on IRR |
-| Internal consistency | Keys, areas and unit counts identical across site plan, cost plan and revenue model; totals reconcile to the sum of lines | Fix the source table; never hard-code a reconciling item |
-| Warnings | All warnings returned by the tools reviewed and either resolved or restated to the user | Material warnings appear in the IM risk section |
+### SOP 07. Institutional Investment Memorandum (owner: Capital Markets agent)
 
-### Phase 7. Investment memorandum assembly
+The IM must be consistent with the approved model version and identify the valuation date, model version, assumption date and verification status. Sections 1 to 4: executive summary, highlights, transaction, sponsor. Sections 5 to 8: location, market, RNAADR, penetration. Sections 9 to 12: masterplan, components, CAPEX, FIXVAR. Sections 13 to 16: HMEV, RLV, financing, equity waterfall. Sections 17 to 20: returns, sensitivity, risks, exit. Sections 21 to 23: legal and regulatory, investment proposal, appendices.
 
-The IM is written in an institutional, data-driven register. Every number in the IM traces to the assumptions register and to a tool output or source document. Section order and minimum content:
+Report total investment, equity and debt requirements, stabilised revenue, EBITDA, NOI, unlevered IRR, levered IRR, equity multiple, payback, exit value and net proceeds. Separate historical facts, verified data, management assumptions and projections. The agent drafts every section from the approved model and the registers, marks each number with its evidence grade, and leaves the sponsor description, legal opinions and the investment recommendation for human authorship and approval.
 
-1. **Executive summary.** Transaction overview, deal structure (SPV, JV, equity and debt split), capital requested, use of proceeds, headline returns (total investment, IRR, equity multiple, payback, stabilised EBITDA), timeline and the three reasons the opportunity exists.
-2. **Investment thesis.** The market gap, the scarcity argument, the brand or operator partnership, the sponsor's track record and the de-risking milestones already achieved.
-3. **Site and masterplan.** Location, access and drive times, topography and views, zoning and permitted parameters, constraints, and the asset breakdown: hotel keys by category, branded versus premium residences by type and area, amenities (spa, beach club, marina, golf, F&B), phasing.
-4. **Location and supply and demand dynamics.** Proximity to primary demand generators, the competitive set with base-year penetration indices, the RNAADR supply additions and demand growth, the subject's projected penetration, occupancy, ADR and RevPAR, and the validation tests passed in Phase 1.
-5. **Business plan.** The ten-year FIXVAR operating pro forma (occupancy, ADR, RevPAR, departmental revenues and expenses, GOP, management fees, fixed charges, reserve, NOI), residential sales schedule and pricing, operator and brand terms, operating structure.
-6. **Development plan and budget.** Capital expenditure by category, cost per sqm and per key benchmarks, programme with milestones, procurement strategy, permitting status and risks, contingency policy.
-7. **Financial projections and returns.** Sources and uses, funding timeline, debt underwriting criteria, the HMEV value bridge (loan, equity cash flows, residual), total investment, leveraged IRR, equity multiple, payback, stabilised NOI, residual land value, sensitivity tables and scenarios, football field.
-8. **Exit strategy.** Hold period, exit route (single-asset sale to an institutional hotel investor, sale with residences sold out, refinancing and hold), the terminal capitalisation rate with transaction evidence, forecast net sales proceeds after brokerage and legal costs, and the loan balance repaid at sale.
-9. **Risk factors and mitigants.** Planning, construction, cost inflation, market, operator, financing, FX and regulatory risks, each with mitigant and the sensitivity result that quantifies it.
-10. **Structure, governance and terms.** Vehicle, governance rights, fees, waterfall, reporting, key-person and exit provisions.
-11. **Appendices.** Assumptions register, comp set detail, cost plan summary, model outputs, team biographies, legal and technical due diligence summaries, disclaimer.
+### SOP 08. Investor teaser and outreach (owner: Investor Relations agent)
 
-The agent drafts sections 1, 4, 5, 7, 8 and 9 in full from the model and the register, drafts 3 and 6 from the data room with gaps flagged, and leaves 2, 10 and the biographies for the deal team, offering structure and prompts.
+1. Teaser of one to three pages: (1) opportunity and location, (2) development concept and financial KPIs, (3) transaction structure and next steps.
+2. Outreach tailored to investor mandate, ticket size, jurisdiction, preferred return and waterfall where relevant; offer NDA and controlled data-room access.
+3. Projected returns are never presented as guaranteed. Securities placement, introductions and transaction-linked remuneration may be regulated; jurisdiction-specific legal review precedes external circulation or capital raising. The agent drafts; a human sends.
 
-### Phase 8. Investor teaser and outreach
+### SOP 09. Independent validation and quality assurance (owner: Chief Risk Officer agent)
 
-1. **Teaser (maximum three pages).** Page 1: location, concept and the single image that explains the site; page 2: masterplan summary and unique selling propositions; page 3: KPI table (total capex, equity requirement, IRR, equity multiple, stabilised EBITDA, timeline) and the ask. No assumption appears in the teaser that is not in the IM.
-2. **Proposal email.** Tailored to the recipient's mandate (core-plus hotel investor, family office, operator-investor, development lender). Four parts: why this partner, what is being offered (JV or equity ticket, preferred return hurdle, promote and waterfall structure, governance), targeted returns with the risk framing, and a specific call to action (site visit dates or NDA execution for the full IM). Length under 250 words.
-3. **Compliance.** Forward-looking statements carry the firm's disclaimer; returns are "targeted", never "expected" or "guaranteed"; confidential material goes out only after NDA; the agent checks the draft against the compliance manual before release and flags anything it cannot verify.
+Run every control in table A5 on the current model version. Material D-grade assumptions block unconditional approval. Maintain the source register, assumptions log, version history and the independent reviewer's sign-off. The validation output is a list of failed controls and open assumptions, not a rewritten model.
 
-### Phase 9. Trainee mentorship and educational scaffolding
+### SOP 10. AI operating responsibilities
 
-1. **Model annotations.** Every section of the RNAADR, FIXVAR and HMEV workbooks carries a short note: what the block computes, the formula (the fixed and variable calculation, the market share adjuster, the simultaneous valuation formula), the source of each input and the common error it guards against (for example, applying the variability index in nominal rather than real terms, discounting the reversion at the wrong period, double counting the reserve).
-2. **Assumption justifications.** The assumptions register's rationale column is written for a junior reader: why a given natural vacancy or stabilised occupancy was selected, how new supply additions change the unaccommodated demand calculation, why scarcity supports the ADR index, why the equity yield carries a country or stage premium, why the contingency is sized as it is.
-3. **Methodology primers.** One page each on the residual method (static and cash flow), DCF versus income capitalisation, FCFE and the equity waterfall, and the difference between project and equity IRR.
-4. **Case studies.** Each closed or declined project becomes an anonymised case: brief, data pack, RNAADR, FIXVAR and HMEV workbooks, memorandum extract, the committee's decision and the lessons. Recommended order for the first set: (i) a coastal resort with branded residences, the firm's core product, which exercises the full RNAADR to residual chain; (ii) an urban mixed-use repositioning, which introduces existing-income analysis, a commercial and meeting demand mix and refurbishment phasing; (iii) a marina-led master plan, which adds infrastructure phasing and ancillary income. Joint venture structures to pair with them: a straight pari passu equity JV, a preferred equity with a promote over an 8 percent hurdle, and a land-for-equity contribution by the vendor.
-5. **Review loop.** Trainee drafts are reviewed against the Phase 6 gates; the agent produces a marked-up list of failed gates and open assumptions rather than a rewritten model.
+The agent performs the roles in table A6 and names the role it is acting as. Human approval is required for final investment recommendations, legal opinions, regulatory determinations, contractual commitments and external distribution.
 
-### Phase 10. Quality control, versioning and audit trail
+### SOP 11. Training and educational scaffolding (owner: Training agent)
 
-1. **Versioning.** Each model and document version is dated and numbered; the change log records what moved and why. Returns are never quoted without the version.
-2. **Integrity checks.** Sources equal uses; balance of funding each period; areas and counts reconcile across sections; no hard-coded reconciling items; sensitivity base case equals the headline case.
-3. **Sign-off matrix.** Analyst builds, associate reviews the model, principal reviews the memorandum, compliance reviews external documents.
-4. **Retention.** The assumptions register, tool outputs and source documents are stored with the deliverable so that any number can be reproduced.
+Every feasibility engagement yields an annotated training model. Each tool call is annotated with what it computes, the formula, the source of each input and the common error it guards against. Trainees must be able to explain competitive weights, natural vacancy, unaccommodated demand, induced demand, FIXVAR cost drivers, debt constraints, equity yields, cap rates and sensitivity results. Each case includes worked examples, a documented assumption rationale and an assessment exercise. Recommended first cases: a coastal resort with branded residences (the full RNAADR to waterfall chain), an urban hotel (commercial and meeting demand), a heritage conversion (cost and constraint driven), paired with a pari passu JV, a preferred equity with promote over an 8 percent hurdle, and a land-for-equity contribution.
 
 ---
 
-## Appendix 1. Assumptions register template
+## First 30 days: implementation roadmap and the agent's part
+
+| Week | Workstream | Deliverable | Agent contribution |
+|---|---|---|---|
+| 1 | Audit reference workbooks | Template inventory and model QA | Map the Advanced Concepts, RNAADR, FIXVAR and HMEV workbooks sheet by sheet to tool inputs; reproduce their outputs; log differences |
+| 2 | Build connected model | RNAADR to FIXVAR to HMEV / DCF | Run the chain end to end on a reference project; reconcile to the workbooks |
+| 3 | Prepare investor documents | IM, teaser and risk templates | Section templates populated from tool outputs with evidence grades |
+| 4 | Pilot Is Prendas | Feasibility, model and committee review | Full chain, validation controls, committee memorandum draft |
+
+## Mandatory project deliverables (SOP 15) and where they come from
+
+| Deliverable | Source |
+|---|---|
+| Project screening and source register; market feasibility and RNAADR demand model | SOP 01; `hotel_market_study` |
+| FIXVAR ten-year operating model; HMEV and unlevered DCF; CAPEX and RLV appraisal | `hotel_fixvar_proforma`; `hotel_mortgage_equity_valuation`, `dcf_valuation`; `residual_land_value`, `development_cash_flow` |
+| Debt underwriting; equity waterfall; investor returns dashboard; downside sensitivities | Sizing tests, `development_cash_flow`; `equity_waterfall`; headline metrics table; `dcf_sensitivity` and scenario re-runs |
+| Independent risk review and investment committee memorandum | Validation controls (A5); committee memorandum draft, decision human |
+| Approved institutional IM, one-to-three-page teaser, investor list, proposal correspondence and data-room checklist | SOP 07 and 08 drafts, human approval before distribution |
+
+Operating principle: one project database, one approved model version, traceable assumptions, independent review and human-controlled investor communications.
+
+---
+
+## Appendix 1. Assumptions log template
 
 | ID | Assumption | Value | Unit | Source | Grade (A to D) | Rationale | Owner | Sensitivity tested |
 |---|---|---|---|---|---|---|---|---|
-| R-01 | Stabilised occupancy | | percent | | | | | |
-| R-02 | Stabilised ADR index by segment | | x market | | | | | |
-| R-03 | Stabilised penetration index by segment | | x fair share | | | | | |
-| R-04 | Unaccommodated demand by segment | | percent of base | | | | | |
-| R-05 | Branded villa price | | EUR per sqm | | | | | |
-| C-01 | Hard cost, hotel | | EUR per sqm GFA | | | | | |
-| C-02 | Contingency | | percent of hard cost | | | | | |
-| F-01 | Terminal capitalisation rate | | percent | | | | | |
+| R-01 | Competitive weights by competitor | | x | | | | | |
+| R-02 | Stabilised penetration index by segment | | x fair share | | | | | |
+| R-03 | Unaccommodated and induced demand by segment | | room nights or percent | | | | | |
+| R-04 | ADR index by segment | | x market | | | | | |
+| R-05 | Branded residence price and absorption | | EUR per sqm; units per year | | | | | |
+| O-01 | Fixed share and driver by expense line | | percent | | | | | |
+| O-02 | Replacement reserve | | percent of revenue | | | | | |
+| C-01 | Hard, site and soft costs | | EUR | | | | | |
+| C-02 | Contingency | | percent | | | | | |
+| F-01 | Mortgage rate, amortisation, LTV, DSCR, debt yield | | | | | | | |
 | F-02 | Equity yield rate | | percent | | | | | |
-| F-03 | Mortgage rate, amortisation, LTV, DCR, debt yield | | | | | | | |
-| F-04 | Construction LTC and rate | | percent | | | | | |
+| F-03 | Terminal capitalisation rate | | percent | | | | | |
+| F-04 | Construction LTC, rate, fees | | | | | | | |
+| F-05 | Waterfall tiers | | | | | | | |
 
-## Appendix 2. Headline metrics table template (IM and teaser)
+## Appendix 2. Headline metrics table template (IM, teaser and returns dashboard)
 
-| Metric | Base case | Downside | Upside |
+| Metric | Downside | Base | Upside |
 |---|---|---|---|
-| Total investment (incl. land and finance) | | | |
-| Equity requirement and peak equity | | | |
-| Unlevered project IRR | | | |
-| Levered equity IRR | | | |
-| Equity multiple | | | |
-| Payback period | | | |
-| Stabilised EBITDA / NOI (after FF&E reserve) | | | |
-| Yield on cost | | | |
-| Profit on cost | | | |
-| Terminal cap rate and net sales proceeds | | | |
-| HMEV value, loan and equity | | | |
+| Total investment (land, development, finance) | | | |
+| Equity requirement and peak equity; debt requirement | | | |
+| Stabilised revenue, EBITDA and NOI | | | |
+| HMEV value, loan and equity; value per key | | | |
+| Unlevered project IRR and NPV at hurdle | | | |
+| Levered equity IRR, equity multiple, payback | | | |
+| LP IRR and multiple; GP promote | | | |
+| Exit value and net sale proceeds | | | |
 | Residual land value versus asking price | | | |
+| Evidence grade of the material assumptions | | | |
 
 ## Appendix 3. Glossary
 
-ADR average daily rate; HARC historic average room count; RNAADR room-night analysis and ADR forecast; FIXVAR fixed and variable component forecast; HMEV hotel mortgage-equity valuation; DCR debt coverage ratio; RevPAR revenue per available room; TRevPAR total revenue per available room; GOP gross operating profit; NOI net operating income; FF&E furniture, fixtures and equipment; OS&E operating supplies and equipment; GDV gross development value; TDC total development cost; RLV residual land value; LTC loan to cost; LTV loan to value; DSCR debt service coverage ratio; FCFE free cash flow to equity; MOIC multiple on invested capital; HMA hotel management agreement; MICE meetings, incentives, conferences and exhibitions; USALI Uniform System of Accounts for the Lodging Industry.
+ADR average daily rate; RevPAR revenue per available room; HARC historic average room count; RNAADR room-night analysis and ADR forecast (working label); FIXVAR fixed and variable component forecast (working label); HMEV hotel mortgage-equity valuation (working label); USALI Uniform System of Accounts for the Lodging Industry; GOP gross operating profit; NOI net operating income; DSCR debt service coverage ratio; LTV loan to value; LTC loan to cost; RLV residual land value; FCFE free cash flow to equity; IM investment memorandum; NDA non-disclosure agreement.
 
 ---
 
-*Analytical support for VT Capital Asset Management's internal decision-making. Not investment advice, a valuation report under the RICS Red Book, or a fairness opinion.*
+*Analytical support for VT Capital Asset Management's internal decision-making under Institutional SOP v2.0. Not investment advice, a valuation report under the RICS Red Book, or a fairness opinion. Human approval is required before any external use.*

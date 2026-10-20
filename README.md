@@ -18,8 +18,11 @@ and testable.
 | Hotel forecast of revenue and expense (FIXVAR) | `hotel_fixvar_proforma` | `valuation/hotel_fixvar.py` (fixed and variable components with variability indices, USALI statement to NOI) |
 | Hotel mortgage-equity valuation (HMEV) | `hotel_mortgage_equity_valuation` | `valuation/mortgage_equity.py` (loan sizing on LTV, DCR and debt yield, simultaneous valuation formula, equity residual) |
 | Greenfield feasibility | `residual_land_value` | `valuation/residual.py` (stabilised value deferred less development, finance and profit) |
+| Residential absorption | `residential_absorption` | `valuation/residential.py` (unit mix, pricing, absorption, payment plan, receipts by year) |
+| Development DCF / FCFE | `development_cash_flow` | `valuation/development.py` (S-curve costs, construction debt, unlevered and equity returns, discounted residual land value) |
+| Equity waterfall | `equity_waterfall` | `valuation/waterfall.py` (IRR hurdles, catch-up, promote, LP and GP returns) |
 
-For hotels and resorts the agent follows the HVS sequence RNAADR to FIXVAR to HMEV to residual land value. The system prompt in `vt_valuation_agent/prompts.py` encodes the house process: derive the
+The agent operates under VT Capital's Institutional Standard Operating Procedure v2.0: for hotels and resorts it follows RNAADR to FIXVAR to HMEV to development appraisal to debt and equity underwriting (the three labels are VT Capital's working names for the methods; no HVS certification is asserted). The system prompt in `vt_valuation_agent/prompts.py` encodes the house process: derive the
 WACC from its components, value with both terminal methods, triangulate against comps and
 precedents, run sensitivities, apply sanity checks (terminal value share of EV, implied
 multiples versus peers, growth versus GDP), and finish with a football field and the
@@ -107,7 +110,7 @@ print(dcf_valuation([111, 127, 143, 159, 175], r.wacc, terminal_growth=0.025, mi
 
 ## Operating procedure
 
-`docs/SOP_project_validation_and_IM.md` is the standard operating procedure the agent follows for
+`docs/SOP_project_validation_and_IM.md` is the agent's implementation of the Institutional SOP v2.0 for
 development and hospitality assets: reference tables (standards, data sources, KPI formulas,
 benchmark ranges, tool coverage) and the phase-by-phase process from intake through market
 validation, residual land value, financial modelling, validation gates, IM assembly, teaser and

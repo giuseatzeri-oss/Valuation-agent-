@@ -25,6 +25,9 @@ from .valuation.hotel_fixvar import ExpenseLine, RevenueLine, fixvar_proforma as
 from .valuation.hotel_market import Competitor, NewSupply, SubjectHotel, market_study as _market_study
 from .valuation.mortgage_equity import mortgage_equity_valuation as _mortgage_equity_valuation
 from .valuation.residual import residual_land_value as _residual_land_value
+from .valuation.residential import PaymentSchedule, UnitType, residential_absorption as _residential_absorption
+from .valuation.development import CostItem, development_cash_flow as _development_cash_flow
+from .valuation.waterfall import WaterfallTier, equity_waterfall as _equity_waterfall
 from .valuation.lbo import lbo_returns as _lbo_returns
 from .valuation.lbo import max_entry_multiple_for_irr as _max_entry_multiple_for_irr
 from .valuation.sensitivity import dcf_sensitivity as _dcf_sensitivity
@@ -448,7 +451,7 @@ def hotel_market_study(
     adr_inflation: float = 0.03,
     max_occupancy: Optional[float] = None,
 ) -> str:
-    """RNAADR: built-up room-night analysis and ADR forecast for a proposed hotel (HVS method).
+    """RNAADR: built-up room-night analysis and ADR forecast for a proposed hotel (VT Capital working label; the method is implemented from first principles and no HVS certification is asserted).
 
     Call this first for any hotel project. From the competitive set it derives
     base-year accommodated demand by segment, each competitor's fair share,
@@ -493,7 +496,7 @@ def hotel_fixvar_proforma(
     inflation: float = 0.03,
     available_rooms_fraction: Optional[list[float]] = None,
 ) -> str:
-    """FIXVAR: fixed and variable component forecast of the hotel operating statement (HVS method).
+    """FIXVAR: fixed and variable component forecast of the hotel operating statement (VT Capital working label; the method is implemented from first principles and no HVS certification is asserted).
 
     Call this after hotel_market_study with its occupancy and ADR series. Each
     line is projected as base x inflation x (fixed share + variable share x
@@ -541,7 +544,7 @@ def hotel_mortgage_equity_valuation(
     rooms: Optional[int] = None,
     sizing_year: int = 1,
 ) -> str:
-    """HMEV: hotel mortgage-equity valuation with loan sizing triangulated on LTV, DCR and debt yield (HVS method).
+    """HMEV: hotel mortgage-equity valuation with loan sizing triangulated on LTV, DCR and debt yield (VT Capital working label; the method is implemented from first principles and no HVS certification is asserted).
 
     Call this with the FIXVAR net operating income for the holding period plus
     one year. Solves the simultaneous valuation formula: value equals the
@@ -626,6 +629,111 @@ def residual_land_value(
     return _dump(result.to_dict())
 
 
+@beta_tool(eager_input_streaming=True)
+def residential_absorption(
+    unit_types: list[UnitType],
+    payment: PaymentSchedule,
+    years: int,
+    price_growth: float = 0.0,
+    selling_costs_pct: float = 0.03,
+    brand_fee_pct: float = 0.0,
+) -> str:
+    """Residential sales schedule: units sold, contracted value and cash receipts by year from unit mix, pricing, absorption and the payment plan.
+
+    Call this for branded residences, villas or condo-hotel units in a
+    mixed-use scheme. Each unit type sells at its own pace from its launch
+    year; buyers pay a reservation share, a construction share spread to
+    completion and the balance at completion. net_receipts_by_year feeds
+    development_cash_flow.
+
+    Args:
+        unit_types: Unit types with count, net saleable sqm, achieved price per sqm, launch year, absorption per year and whether branded.
+        payment: Completion year and the reservation, construction and completion payment shares (sum to 1).
+        years: Projection horizon in years.
+        price_growth: Annual growth in achieved prices.
+        selling_costs_pct: Agency and marketing costs as a share of receipts.
+        brand_fee_pct: Brand licence fee as a share of receipts on branded units.
+    """
+    result = _guard(_residential_absorption, unit_types, payment, years, price_growth, selling_costs_pct, brand_fee_pct)
+    return _dump(result.to_dict())
+
+
+@beta_tool(eager_input_streaming=True)
+def development_cash_flow(
+    land_cost: float,
+    cost_items: list[CostItem],
+    operating_noi: list[float],
+    exit_year: int,
+    terminal_cap_rate: float,
+    exit_noi: float,
+    project_hurdle_rate: float,
+    residential_net_receipts: Optional[list[float]] = None,
+    other_income: Optional[list[float]] = None,
+    selling_costs_pct: float = 0.02,
+    opening_year: Optional[int] = None,
+    construction_ltc: float = 0.0,
+    interest_rate: float = 0.0,
+    loan_fees_pct: float = 0.0,
+) -> str:
+    """Dated development cash flow with construction debt: unlevered and equity returns, peak equity and the discounted residual land value.
+
+    Call this for phased or greenfield projects after the FIXVAR NOI (and any
+    residential schedule) are known. Costs spread on an S-curve or straight
+    line; the loan funds a share of development cost with interest capitalised
+    until opening and repaid at exit. Returns unlevered IRR and NPV at the
+    hurdle, equity IRR and multiple, payback, peak equity and debt, profit on
+    cost, and the land payment that delivers the hurdle return. Pass
+    equity_cash_flows to equity_waterfall.
+
+    Args:
+        land_cost: Land payment at year 0 (acquisition).
+        cost_items: Development cost items with amount, start year, duration and spend profile.
+        operating_noi: Net operating income by project year starting at year 1 (zero before opening), covering the exit year.
+        exit_year: Project year of disposal.
+        terminal_cap_rate: Capitalisation rate applied to exit_noi.
+        exit_noi: Forward (exit year + 1) net operating income.
+        project_hurdle_rate: Required unlevered project return, used for NPV and the residual.
+        residential_net_receipts: Net residential receipts by project year from residential_absorption.
+        other_income: Any other net income by project year.
+        selling_costs_pct: Disposal costs as a share of exit value.
+        opening_year: Year from which interest is paid rather than capitalised; defaults to the first year with positive NOI.
+        construction_ltc: Construction loan as a share of development cost (excluding land).
+        interest_rate: Construction loan interest rate.
+        loan_fees_pct: Arrangement fees as a share of each draw.
+    """
+    result = _guard(
+        _development_cash_flow, land_cost, cost_items, operating_noi, exit_year, terminal_cap_rate, exit_noi, project_hurdle_rate,
+        residential_net_receipts, other_income, selling_costs_pct, opening_year, construction_ltc, interest_rate, loan_fees_pct,
+    )
+    return _dump(result.to_dict())
+
+
+@beta_tool(eager_input_streaming=True)
+def equity_waterfall(
+    cash_flows: list[float],
+    tiers: list[WaterfallTier],
+    lp_capital_share: float = 1.0,
+    catch_up_pct: Optional[float] = None,
+    catch_up_to_promote: Optional[float] = None,
+) -> str:
+    """Joint venture equity waterfall: distributions to LP capital, GP co-invest and GP promote through IRR hurdles, with optional catch-up.
+
+    Call this with the equity cash flows from development_cash_flow (or any
+    equity series) and the tiers exactly as the shareholders' agreement drafts
+    them. Reports per-period splits, LP and GP IRR and multiples, total promote
+    and its share of profit, and the capital IRR before promote.
+
+    Args:
+        cash_flows: Total equity cash flows by period from period 0; negatives are contributions.
+        tiers: Ordered tiers; each has a hurdle IRR (None for the last) and the share of that tier paid to capital (the rest is promote).
+        lp_capital_share: LP share of contributed capital; the GP co-invests the rest pari passu.
+        catch_up_pct: GP share of distributions during the catch-up after the first hurdle (e.g. 1.0 for a full catch-up).
+        catch_up_to_promote: Promote share of total profit the catch-up targets (e.g. 0.2).
+    """
+    result = _guard(_equity_waterfall, cash_flows, tiers, lp_capital_share, catch_up_pct, catch_up_to_promote)
+    return _dump(result.to_dict())
+
+
 VALUATION_TOOLS = [
     compute_wacc,
     lever_beta,
@@ -642,4 +750,7 @@ VALUATION_TOOLS = [
     hotel_fixvar_proforma,
     hotel_mortgage_equity_valuation,
     residual_land_value,
+    residential_absorption,
+    development_cash_flow,
+    equity_waterfall,
 ]

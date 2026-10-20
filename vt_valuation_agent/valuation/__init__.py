@@ -13,10 +13,23 @@ from .hotel_market import Competitor, MarketStudyResult, NewSupply, SubjectHotel
 from .lbo import LboResult, lbo_returns, max_entry_multiple_for_irr
 from .mortgage_equity import MortgageEquityResult, loan_balance_fraction, mortgage_constant, mortgage_equity_valuation
 from .residual import ResidualLandValueResult, residual_land_value
+from .residential import AbsorptionResult, PaymentSchedule, UnitType, residential_absorption
+from .development import CostItem, DevelopmentResult, development_cash_flow
+from .waterfall import WaterfallResult, WaterfallTier, equity_waterfall
 from .sensitivity import SensitivityTable, dcf_sensitivity
 from .wacc import WaccResult, cost_of_equity_capm, relever_beta, unlever_beta, wacc
 
 __all__ = [
+    "AbsorptionResult",
+    "CostItem",
+    "DevelopmentResult",
+    "PaymentSchedule",
+    "UnitType",
+    "WaterfallResult",
+    "WaterfallTier",
+    "development_cash_flow",
+    "equity_waterfall",
+    "residential_absorption",
     "Competitor",
     "ExpenseLine",
     "MarketStudyResult",
