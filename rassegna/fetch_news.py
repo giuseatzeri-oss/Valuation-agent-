@@ -26,10 +26,13 @@ def main(out):
     for sez in cfg["sezioni"]:
         items = []
         for q in sez["query"]:
-            try:
-                feed = gnews(q)
-            except Exception as e:
-                print(f"! {q}: {e}", file=sys.stderr); continue
+            feed = None
+            for attempt in range(3):  # Google News a volte risponde 503: riprova
+                try:
+                    feed = gnews(q); break
+                except Exception as e:
+                    print(f"! {q} (tentativo {attempt+1}): {e}", file=sys.stderr); time.sleep(3 * (attempt + 1))
+            if feed is None: continue
             for e in feed.entries[:15]:
                 pub = datetime(*e.published_parsed[:6], tzinfo=timezone.utc) if e.get("published_parsed") else None
                 if pub and pub < cutoff: continue
